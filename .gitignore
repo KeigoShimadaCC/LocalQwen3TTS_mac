@@ -1,0 +1,10 @@
+.DS_Store
+node_modules/
+.venv/
+dist/
+build/
+*.pyc
+__pycache__/
+.pytest_cache/
+generated_audio/
+frontend/.vite/

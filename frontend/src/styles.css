@@ -1,0 +1,107 @@
+:root {
+  font-family: "Spline Sans", "Helvetica Neue", sans-serif;
+  color: #0b3749;
+  background: radial-gradient(circle at top, #f7fbff, #e2f0ff);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.page {
+  padding: 2rem;
+}
+
+header {
+  margin-bottom: 2rem;
+}
+
+.content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.controls,
+.preview {
+  flex: 1;
+  min-width: 300px;
+  background: white;
+  border-radius: 18px;
+  padding: 1.5rem;
+  box-shadow: 0 20px 45px rgba(16, 65, 109, 0.12);
+}
+
+textarea,
+select,
+input {
+  width: 100%;
+  margin-top: 0.4rem;
+  margin-bottom: 1rem;
+  padding: 0.7rem;
+  border-radius: 10px;
+  border: 1px solid #c9ddee;
+  font-family: inherit;
+}
+
+button {
+  padding: 0.9rem 1.8rem;
+  border: none;
+  border-radius: 999px;
+  background: #008cd3;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.player,
+.examples {
+  margin-bottom: 1.5rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid #e1ecf5;
+  padding: 0.6rem 0.4rem;
+  text-align: left;
+}
+
+tr:hover {
+  background: #f3fbff;
+  cursor: pointer;
+}
+
+.error {
+  color: #b3261e;
+}
+
+.request {
+  color: #0f6e3a;
+}
+
+audio {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .content {
+    flex-direction: column;
+  }
+}
