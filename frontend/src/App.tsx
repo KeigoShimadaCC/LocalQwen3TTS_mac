@@ -50,8 +50,9 @@ const examples = [
   },
 ];
 
-// Derive backend base URL from env, defaulting to local dev server.
-const API_BASE = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000";
+// In dev, use same-origin so Vite proxy forwards /v1 and /health to the backend.
+// Set VITE_API_BASE to override (e.g. "http://127.0.0.1:8000" or a remote URL).
+const API_BASE = import.meta.env.VITE_API_BASE ?? "";
 
 function App() {
   // Form + playback state buckets.
@@ -99,7 +100,21 @@ function App() {
         setAudioSrc(`${API_BASE}${response.audio_url}`);
       }
     } catch (err: any) {
-      setError(err?.response?.data?.detail ?? err.message ?? "Request failed");
+      const detail = err?.response?.data?.detail;
+      const detailStr =
+        typeof detail === "string"
+          ? detail
+          : Array.isArray(detail)
+            ? detail.map((d: any) => d?.msg ?? String(d)).join("; ")
+            : undefined;
+      const msg = detailStr ?? err?.message ?? "Request failed";
+      const isNetworkError =
+        !err?.response && (msg === "Network Error" || msg.includes("Network Error"));
+      setError(
+        isNetworkError
+          ? "Backend unreachable. Start it: cd backend && source .venv3.11/bin/activate && uvicorn app.main:app --reload (and set HF_TOKEN if needed)."
+          : msg
+      );
     } finally {
       setLoading(false);
     }

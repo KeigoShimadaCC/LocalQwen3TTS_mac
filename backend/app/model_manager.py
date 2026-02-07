@@ -43,6 +43,14 @@ SUPPORTED_QWEN_SPEAKERS: List[str] = [
 ]
 
 
+def _to_numpy(audio: Any) -> np.ndarray:
+    """Convert pipeline output (torch.Tensor or array-like) to float32 numpy."""
+    if hasattr(audio, "cpu"):
+        audio = audio.cpu().numpy()
+    arr = np.asarray(audio, dtype=np.float32)
+    return arr
+
+
 def canonical_voice_name(name: str | None) -> str | None:
     if not name:
         return None
@@ -136,7 +144,7 @@ class QwenModelWrapper:
             self.pipeline, "generate_voice_design"
         ):
             wav, sample_rate = self._run_qwen3_model(kwargs)
-            audio = ensure_mono(np.array(wav, dtype=np.float32))
+            audio = ensure_mono(_to_numpy(wav))
             audio = normalize_waveform(audio)
             return audio, sample_rate
 
@@ -149,7 +157,7 @@ class QwenModelWrapper:
             speed=kwargs.get("speed", 1.0),
             sample_rate=kwargs.get("sample_rate"),
         )
-        audio = ensure_mono(np.array(result["audio"], dtype=np.float32))
+        audio = ensure_mono(_to_numpy(result["audio"]))
         audio = normalize_waveform(audio)
         sample_rate = result.get("sample_rate", kwargs.get("sample_rate"))
         return audio, sample_rate

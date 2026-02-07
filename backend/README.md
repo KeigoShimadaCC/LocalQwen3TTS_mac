@@ -46,6 +46,17 @@ pip install git+https://github.com/QwenLM/Qwen3-TTS.git
 # If accelerate>=1.12.0 fails, install accelerate==1.10.1 manually
 ```
 
+## Verify setup (optional)
+
+Check env, model cache, and a minimal TTS run:
+
+```bash
+source .venv3.11/bin/activate
+# Load HF_TOKEN from repo root .env.local if you use it:
+# set -a && source ../.env.local && set +a
+python scripts/check_backend.py
+```
+
 ## Running Locally
 
 ```bash
