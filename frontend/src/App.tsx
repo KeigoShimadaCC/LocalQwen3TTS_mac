@@ -1,12 +1,16 @@
+// Core React hooks to organize component state and memoized options.
 import { useMemo, useState } from "react";
+// Typed API helper that wraps the backend /v1/tts endpoint.
 import { synthesize } from "./api";
 import type { TTSRequestPayload, TTSResponse } from "./api";
 
+// Available model identifiers exposed by the backend.
 const models = [
   { label: "Qwen3-TTS 0.6B", value: "qwen3-tts-0.6b" },
   { label: "Qwen3-TTS 1.7B", value: "qwen3-tts-1.7b" },
 ];
 
+// Language hints forwarded to the Qwen pipeline (auto -> let model decide).
 const languages = [
   { label: "Auto", value: "auto" },
   { label: "English", value: "en" },
@@ -18,8 +22,10 @@ const languages = [
   { label: "Korean", value: "ko" },
 ];
 
+// Static fallback voices; backend may expose a richer set via /v1/voices.
 const voiceOptions = ["custom_female", "custom_male", "storyteller"];
 
+// Example presets so operators can demo multi-lingual voices quickly.
 const examples = [
   {
     text: "Welcome to the Qwen3 TTS demo!",
@@ -44,9 +50,11 @@ const examples = [
   },
 ];
 
+// Derive backend base URL from env, defaulting to local dev server.
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000";
 
 function App() {
+  // Form + playback state buckets.
   const [text, setText] = useState("Welcome to Qwen3-TTS running on macOS!");
   const [model, setModel] = useState(models[0].value);
   const [voice, setVoice] = useState(voiceOptions[0]);
@@ -61,6 +69,7 @@ function App() {
 
   const voiceList = useMemo(() => voiceOptions, []);
 
+  // Submit handler orchestrates API call + blob conversion.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -96,6 +105,7 @@ function App() {
     }
   };
 
+  // Load an example row into the form.
   const handleExample = (example: (typeof examples)[0]) => {
     setText(example.text);
     setVoice(example.voice);
@@ -171,8 +181,8 @@ function App() {
             </label>
           </div>
           <button type="submit" disabled={loading}>
-            {loading ? "Generating..." : "Generate"}
-          </button>
+      {loading ? "Generating..." : "Generate"}
+    </button>
           {error && <p className="error">{error}</p>}
           {requestId && <p className="request">request_id: {requestId}</p>}
         </form>

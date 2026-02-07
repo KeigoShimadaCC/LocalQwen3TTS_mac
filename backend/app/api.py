@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import time
 import uuid
 
@@ -21,12 +22,7 @@ from .utils_audio import audio_bytes_base64, convert_audio, waveform_duration
 
 
 router = APIRouter()
-
-
-VOICE_MAP = {
-    ModelName.SMALL: ["custom_female", "custom_male"],
-    ModelName.LARGE: ["custom_female", "custom_male", "storyteller"],
-}
+LOGGER = logging.getLogger(__name__)
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -42,8 +38,12 @@ async def health() -> HealthResponse:
 
 
 @router.get("/v1/voices", response_model=VoiceResponse)
-async def list_voices(model: ModelName = ModelName.SMALL) -> VoiceResponse:
-    return VoiceResponse(model=model, voices=VOICE_MAP.get(model, []))
+async def list_voices(
+    model: ModelName = ModelName.SMALL, refresh: bool = False
+) -> VoiceResponse:
+    manager = get_manager()
+    voices = manager.available_voices(model.value, refresh=refresh)
+    return VoiceResponse(model=model, voices=voices)
 
 
 @router.post("/v1/tts", response_model=TTSResponse)
@@ -52,6 +52,15 @@ async def synthesize(request: TTSRequest) -> TTSResponse:
         raise HTTPException(status_code=400, detail="streaming not implemented yet")
     manager = get_manager()
     req_id = request.request_id or uuid.uuid4().hex
+    start_time = time.perf_counter()
+    LOGGER.info(
+        "[tts] request_id=%s model=%s voice=%s language=%s format=%s",
+        req_id,
+        request.model.value,
+        request.voice,
+        request.language.value,
+        request.format.value,
+    )
     try:
         cache_key = None
         if cache:
@@ -68,6 +77,13 @@ async def synthesize(request: TTSRequest) -> TTSResponse:
             )
             cached = cache.get(cache_key)
             if cached:
+                cache_hits, cache_misses = cache.stats
+                LOGGER.info(
+                    "[tts] cache hit request_id=%s hits=%s misses=%s",
+                    req_id,
+                    cache_hits,
+                    cache_misses,
+                )
                 audio_bytes, fmt, sr, duration = cached
                 return _build_response(req_id, fmt, sr, duration, audio_bytes)
 
@@ -82,6 +98,7 @@ async def synthesize(request: TTSRequest) -> TTSResponse:
             sample_rate=request.sample_rate,
         )
     except QueueFullError:
+        LOGGER.warning("[tts] queue full request_id=%s", req_id)
         raise HTTPException(status_code=429, detail="queue full")
 
     audio_bytes, fmt, sr = convert_audio(audio, sample_rate, request.format.value)
@@ -89,7 +106,21 @@ async def synthesize(request: TTSRequest) -> TTSResponse:
 
     if cache and cache_key:
         cache.put(cache_key, (audio_bytes, fmt, sr, duration))
+        cache_hits, cache_misses = cache.stats
+        LOGGER.info(
+            "[tts] cache store request_id=%s hits=%s misses=%s",
+            req_id,
+            cache_hits,
+            cache_misses,
+        )
 
+    elapsed = (time.perf_counter() - start_time) * 1000
+    LOGGER.info(
+        "[tts] completed request_id=%s duration_ms=%.2f sample_rate=%s",
+        req_id,
+        elapsed,
+        sr,
+    )
     return _build_response(req_id, fmt, sr, duration, audio_bytes)
 
 

@@ -7,10 +7,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import api
 from .config import settings
+from .logging import setup_logging
 from .model_manager import get_manager
 
 
 def create_app() -> FastAPI:
+    setup_logging(getattr(logging, settings.log_level.upper(), logging.INFO))
     app = FastAPI(title="Qwen3-TTS Service")
     app.include_router(api.router)
     app.add_middleware(

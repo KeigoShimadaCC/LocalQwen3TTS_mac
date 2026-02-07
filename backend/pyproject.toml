@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qwen3-tts-backend"
-version = "0.1.0"
+version = "0.1.1"
 description = "Minimal production-shaped FastAPI backend for Qwen3-TTS"
 requires-python = ">=3.11"
 dependencies = [
@@ -14,14 +14,18 @@ dependencies = [
     "python-dotenv>=1.0",
     "soundfile>=0.12",
     "numpy>=1.26",
-    "torch>=2.3",
+    "torch>=2.1",
     "httpx>=0.27",
     "loguru>=0.7",
     "aiofiles>=23.2",
     "python-multipart>=0.0.9",
     "tenacity>=8.2",
-    "typing-extensions>=4.9"
+    "typing-extensions>=4.9",
+    "importlib-metadata>=6.0; python_version<'3.10'"
 ]
+
+[project.scripts]
+qwen3-tts-batch = "app.scripts.run_batch:main"
 
 [project.optional-dependencies]
 dev = [

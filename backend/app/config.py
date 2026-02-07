@@ -36,6 +36,8 @@ class Settings:
     scalable_mode: bool = _get_bool("TTS_SCALABLE_MODE", True)
     default_sample_rate: int = int(os.getenv("TTS_DEFAULT_SAMPLE_RATE", "24000"))
     startup_time: float = time.time()
+    log_level: str = os.getenv("TTS_LOG_LEVEL", "INFO")
+    hf_mirror: str | None = os.getenv("TTS_HF_MIRROR")
 
 
 settings = Settings()
