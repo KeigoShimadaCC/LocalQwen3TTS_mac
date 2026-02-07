@@ -13,7 +13,7 @@ Local-first Text-to-Speech playground that wraps the **official Qwen3-TTS Custom
 - macOS on Apple Silicon strongly recommended (MPS acceleration). Works on Intel/macOS but without GPU.
 - Python 3.11 (backend). The repository standardizes on `backend/.venv3.11` so the official `qwen-tts` wheels install cleanly.
 - Node.js ≥ 18 (frontend).
-- FFmpeg installed if you plan to output MP3 (needed by `pydub`).
+- For MP3 output: install the optional `mp3` extra (`pip install -e '.[mp3]'`) and FFmpeg (e.g. `brew install ffmpeg`). Without these, use WAV only.
 
 ## Backend Setup
 
@@ -22,6 +22,9 @@ cd backend
 python3.11 -m venv .venv3.11
 source .venv3.11/bin/activate
 pip install -e '.[dev]'
+
+# Optional: MP3 output (requires FFmpeg: brew install ffmpeg)
+# pip install -e '.[mp3]'
 
 # Install official Qwen3-TTS pipeline
 pip install git+https://github.com/QwenLM/Qwen3-TTS.git
@@ -74,7 +77,7 @@ When `TTS_OUTPUT_MODE=file`, the UI automatically switches to audio URLs sourced
 
 ```bash
 cd backend
-source .venv/bin/activate
+source .venv3.11/bin/activate
 pytest  # unit + integration tests (models patched)
 
 # lightweight latency check (uses httpx AsyncClient)
@@ -93,7 +96,7 @@ The smoke tests monkeypatch `ModelManager.synthesize` so they remain fast and av
 ## Troubleshooting
 
 - **401 Hugging Face download errors** – export `HF_TOKEN` (or run `huggingface-cli login`) before calling `uvicorn` so the weights can be fetched.
-- **MP3 output fails** – Install `pydub` + FFmpeg (`brew install ffmpeg`). Without it, stick to WAV.
+- **MP3 output fails** – Install the `mp3` extra (`pip install -e '.[mp3]'`) and FFmpeg (`brew install ffmpeg`). Without these, stick to WAV.
 - **MPS dtype errors** – Some PyTorch versions need `PYTORCH_ENABLE_MPS_FALLBACK=1`. Set via env if you see “Metal device set to CPU fallback”.
 - **Large output_dir growth** – If `TTS_OUTPUT_MODE=file`, ensure a cron/job cleans up `generated_audio/` or point `TTS_OUTPUT_DIR` to a tmpfs.
 - **Voice metadata empty** – The backend falls back to a static voice list if the Qwen pipeline does not expose `list_voices`. Use `refresh=true` to force another probe after updating weights.

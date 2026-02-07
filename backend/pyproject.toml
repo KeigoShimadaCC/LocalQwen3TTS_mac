@@ -34,7 +34,10 @@ dev = [
     "pytest-mock>=3.12",
     "anyio>=4.4"
 ]
+mp3 = [
+    "pydub>=0.25",
+]
 
 [tool.pytest.ini_options]
 addopts = "-ra"
-testpaths = ["backend/tests"]
+testpaths = ["tests"]
