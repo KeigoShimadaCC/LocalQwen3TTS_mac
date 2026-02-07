@@ -100,28 +100,43 @@ async def synthesize(request: TTSRequest) -> TTSResponse:
     except QueueFullError:
         LOGGER.warning("[tts] queue full request_id=%s", req_id)
         raise HTTPException(status_code=429, detail="queue full")
+    except Exception as exc:
+        LOGGER.exception("[tts] request_id=%s error=%s", req_id, exc)
+        raise HTTPException(
+            status_code=500,
+            detail=f"TTS failed: {exc!s}. Check server logs for traceback.",
+        ) from exc
 
-    audio_bytes, fmt, sr = convert_audio(audio, sample_rate, request.format.value)
-    duration = waveform_duration(audio, sr)
-
-    if cache and cache_key:
-        cache.put(cache_key, (audio_bytes, fmt, sr, duration))
-        cache_hits, cache_misses = cache.stats
-        LOGGER.info(
-            "[tts] cache store request_id=%s hits=%s misses=%s",
-            req_id,
-            cache_hits,
-            cache_misses,
+    try:
+        audio_bytes, fmt, sr = convert_audio(
+            audio, sample_rate, request.format.value
         )
+        duration = waveform_duration(audio, sr)
 
-    elapsed = (time.perf_counter() - start_time) * 1000
-    LOGGER.info(
-        "[tts] completed request_id=%s duration_ms=%.2f sample_rate=%s",
-        req_id,
-        elapsed,
-        sr,
-    )
-    return _build_response(req_id, fmt, sr, duration, audio_bytes)
+        if cache and cache_key:
+            cache.put(cache_key, (audio_bytes, fmt, sr, duration))
+            cache_hits, cache_misses = cache.stats
+            LOGGER.info(
+                "[tts] cache store request_id=%s hits=%s misses=%s",
+                req_id,
+                cache_hits,
+                cache_misses,
+            )
+
+        elapsed = (time.perf_counter() - start_time) * 1000
+        LOGGER.info(
+            "[tts] completed request_id=%s duration_ms=%.2f sample_rate=%s",
+            req_id,
+            elapsed,
+            sr,
+        )
+        return _build_response(req_id, fmt, sr, duration, audio_bytes)
+    except Exception as exc:
+        LOGGER.exception("[tts] request_id=%s post-synth error=%s", req_id, exc)
+        raise HTTPException(
+            status_code=500,
+            detail=f"TTS failed: {exc!s}. Check server logs for traceback.",
+        ) from exc
 
 
 def _build_response(
